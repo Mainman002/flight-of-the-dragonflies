@@ -1,3 +1,5 @@
+"use_strict"
+
 // Modules to control application life and create native browser window
 const {app, BrowserWindow} = require('electron')
 const path = require('path')
@@ -9,6 +11,8 @@ function createWindow () {
     height: 600,
     autoHideMenuBar: true,
     webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
       preload: path.join(__dirname, 'preload.js')
     }
   })
@@ -42,3 +46,49 @@ app.on('window-all-closed', function () {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
+
+// Data File Management
+const { ipcRenderer } = require('electron');
+const { ipcMain } = require('electron');
+
+const data = {};
+
+// Load json data
+ipcMain.on('getState', (event, arg) => {
+    event.reply('sendState',   arg);
+});
+
+
+let fs = require('fs'),
+    jsonData = JSON.stringify(data);
+
+
+
+// readFile data
+ipcMain.on('requestJSON', (event, arg) => {
+
+  fs.readFile('./gameData.json', (err, arg) => {
+    if (err){
+      console.log("No save file: ", err);
+      // throw err;
+    } else {
+      const d = JSON.parse(arg);
+      console.log(`Reading: ${d.highscore}`);
+  
+      event.reply('responseJSON',   d);
+    }
+  }); 
+});
+
+
+// writeFile data
+ipcMain.on('pushJSON', (event, arg) => {
+
+  fs.writeFile('./gameData.json', JSON.stringify(arg), (err) => {
+    console.log(`Writing: ${arg.highscore}`);
+    if (err) throw err;
+  });
+});
+
+
