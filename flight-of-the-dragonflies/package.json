@@ -6,14 +6,14 @@
   "scripts": {
     "start": "electron ."
   },
-  "repository": "https://github.com/",
+  "repository": "https://github.com/Mainman002/flight-of-the-dragonflies/",
   "keywords": [
     "flight",
     "dragon",
     "fly",
     "flies"
   ],
-  "author": "Johnathan Mueller, Franks laboratory",
+  "author": "Johnathan Mueller, Mrwan Ashraf, Franks laboratory",
   "license": "Unknown",
   "devDependencies": {
     "electron": "^13.1.7"
