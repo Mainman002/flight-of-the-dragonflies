@@ -37,8 +37,9 @@ globalThis.insaneMode = false;
 globalThis.autoInsaneMode = true;
 globalThis.ShowParticles = true;
 globalThis.allowSaving = false;
+globalThis.allowAudio = true;
 
-const btnVars = [godMode, autoInsaneMode, insaneMode, showButtons, ShowParticles, allowSaving];
+const btnVars = [godMode, autoInsaneMode, insaneMode, showButtons, ShowParticles, allowSaving, allowAudio];
 
 // Input Variables
 globalThis.MousePos = {'x':0, 'y':0};
@@ -104,6 +105,10 @@ class Button {
             case 5:
                 this.checked = allowSaving;
                 break;
+
+            case 6:
+                this.checked = allowAudio;
+                break;
         }
 
         // console.log(this.pos.x);
@@ -158,6 +163,10 @@ class Button {
             case 5:
                 allowSaving = this.checked;
                 break;
+            
+            case 6: 
+                allowAudio = this.checked;
+                break;
         }
 
         // console.log(`value: ${godMode}`)
@@ -209,11 +218,13 @@ add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset}, 32, '', 3, true, true)
 add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Cheats_______', ' ', false, false)
 add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'God Mode', 0, false, true)
 add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Settings______', ' ', false, false)
+add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Sounds', 6, false, true)
 add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Auto Difficulty', 2, false, true)
 add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Insane Difficulty', 1, false, true)
 add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Save Highscore', 5, false, true)
 add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Graphics______', ' ', false, false)
 add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Particles', 4, false, true)
+
 
 function add_btn(pos={'x':0, 'y':0}, size, text, id, shown, icon){
     buttons.push(new Button({'x':pos.x, 'y':pos.y}, size, text, id, shown, icon));
@@ -305,7 +316,7 @@ class Explosion {
    } 
 
    update(deltatime){
-        if (this.frame === 0){this.sound.play()};
+        if (allowAudio && this.frame === 0){this.sound.play()};
             this.timeSinceLastFrame += deltatime;
         if (this.timeSinceLastFrame > this.frameInterval){
             this.frame++;
