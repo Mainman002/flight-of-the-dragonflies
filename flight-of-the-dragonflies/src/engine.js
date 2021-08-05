@@ -1,10 +1,35 @@
 
+const { ipcRenderer } = require('electron');
 
 
-let data = {};
+let data = {"highscore":0};
+let highScore = 0;
 
-// var myFile = new File([JSON.stringify(data)], "data.json", {type: "text/json;charset=utf-8"});
-// saveAs(myFile);
+// Load Data
+ipcRenderer.send('requestJSON');
+
+ipcRenderer.on('responseJSON', (event, args)  => {
+    if (args){
+        data = args;
+        highScore = data.highscore;
+    }
+    // console.log("recievedD: ", data.highscore);
+});
+
+
+// Store Data 
+// ipcRenderer.send('getState');
+
+// ipcRenderer.on('sendState', (event, args)  => {
+//     args.highscore++;
+//     console.log(`Sent data: ${args}`);
+// });
+
+
+// Save data
+// ipcRenderer.send('pushJSON', ("", data));
+
+
 
 
 // Game Canvas and Context Variables
@@ -36,10 +61,10 @@ globalThis.godMode = false;
 globalThis.insaneMode = false;
 globalThis.autoInsaneMode = true;
 globalThis.ShowParticles = true;
-globalThis.allowSaving = false;
-globalThis.allowAudio = true;
+globalThis.allowSaving = true;
+globalThis.allowSound = true;
 
-const btnVars = [godMode, autoInsaneMode, insaneMode, showButtons, ShowParticles, allowSaving, allowAudio];
+const btnVars = [godMode, autoInsaneMode, insaneMode, showButtons, ShowParticles, allowSaving, allowSound];
 
 // Input Variables
 globalThis.MousePos = {'x':0, 'y':0};
@@ -47,7 +72,8 @@ globalThis.MousePos = {'x':0, 'y':0};
 // Game Variables
 globalThis.gameOver = false;
 let score = 0;
-let highScore = 0;
+highScore = data.highscore;
+console.log("TempData: ", data.highscore)
 let canSave = false;
 
 // Graphics Variables
@@ -104,10 +130,10 @@ class Button {
 
             case 5:
                 this.checked = allowSaving;
-                break;
-
+                break; 
+            
             case 6:
-                this.checked = allowAudio;
+                this.checked = allowSound;
                 break;
         }
 
@@ -164,8 +190,8 @@ class Button {
                 allowSaving = this.checked;
                 break;
             
-            case 6: 
-                allowAudio = this.checked;
+            case 6:
+                allowSound = this.checked;
                 break;
         }
 
@@ -218,13 +244,12 @@ add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset}, 32, '', 3, true, true)
 add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Cheats_______', ' ', false, false)
 add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'God Mode', 0, false, true)
 add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Settings______', ' ', false, false)
-add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Sounds', 6, false, true)
+add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Save HighScore', 5, false, true)
+add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Audio', 6, false, true)
 add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Auto Difficulty', 2, false, true)
 add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Insane Difficulty', 1, false, true)
-add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Save Highscore', 5, false, true)
 add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Graphics______', ' ', false, false)
 add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Particles', 4, false, true)
-
 
 function add_btn(pos={'x':0, 'y':0}, size, text, id, shown, icon){
     buttons.push(new Button({'x':pos.x, 'y':pos.y}, size, text, id, shown, icon));
@@ -316,7 +341,7 @@ class Explosion {
    } 
 
    update(deltatime){
-        if (allowAudio && this.frame === 0){this.sound.play()};
+        if (allowSound && this.frame === 0){this.sound.play()};
             this.timeSinceLastFrame += deltatime;
         if (this.timeSinceLastFrame > this.frameInterval){
             this.frame++;
@@ -397,13 +422,6 @@ function drawGameOver(){
         highScore = score;
         drawLabel(`your !NEW! High Score: ${score}`, 'white', canvas.width/2, canvas.height/2+70, 'center', 10+canvas.height/15, 'Impact', true);
 
-        if (allowSaving && canSave){
-            data = {'Score':highScore};
-            var myFile = new File([JSON.stringify(data)], "data.json", {type: "text/json;charset=utf-8"});
-            saveAs(myFile);
-            canSave = false;
-        }
-
     } else if (highScore > 0) {
         drawLabel(`High Score: ${highScore}`, 'white', canvas.width/2, canvas.height/2+70, 'center', 10+canvas.height/15, 'Impact', true);
     }
@@ -452,6 +470,13 @@ window.addEventListener('keydown', (e) => {
 
 
 function reset_game(){
+
+    if (allowSaving && score > 0 && score >= highScore){
+        data.highscore = highScore;
+        // Save data
+        ipcRenderer.send('pushJSON', ("", data));
+    }
+
     canSave = false;
     gameOver = false;
     score = 0;
