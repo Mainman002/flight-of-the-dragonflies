@@ -17,5 +17,6 @@
   "license": "Unknown",
   "devDependencies": {
     "electron": "^13.1.7"
-  }
+  },
+  "dependencies": {}
 }

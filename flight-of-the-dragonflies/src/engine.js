@@ -6,8 +6,6 @@ let data = {};
 // var myFile = new File([JSON.stringify(data)], "data.json", {type: "text/json;charset=utf-8"});
 // saveAs(myFile);
 
-let canSave = false;
-
 
 // Game Canvas and Context Variables
 const canvas = document.getElementById('canvas');
@@ -38,8 +36,9 @@ globalThis.godMode = false;
 globalThis.insaneMode = false;
 globalThis.autoInsaneMode = true;
 globalThis.ShowParticles = true;
+globalThis.allowSaving = false;
 
-const btnVars = [godMode, autoInsaneMode, insaneMode, showButtons, ShowParticles];
+const btnVars = [godMode, autoInsaneMode, insaneMode, showButtons, ShowParticles, allowSaving];
 
 // Input Variables
 globalThis.MousePos = {'x':0, 'y':0};
@@ -48,6 +47,7 @@ globalThis.MousePos = {'x':0, 'y':0};
 globalThis.gameOver = false;
 let score = 0;
 let highScore = 0;
+let canSave = false;
 
 // Graphics Variables
 let fontSize = 50;
@@ -58,7 +58,8 @@ ctx.font = `${fontSize}px Impact`;
 
 let buttons = [];
 class Button {
-    constructor(pos={'x':0, 'y':0}, size=64, text='', variable, panelButton){
+    constructor(pos={'x':0, 'y':0}, size=64, text='', variable, panelButton, icon){
+        this.icon = icon;
         this.variable = variable;
         this.checked = btnVars[this.variable];
         this.text = text;
@@ -77,6 +78,9 @@ class Button {
     update(){
 
         switch(this.variable){
+            case ' ':
+                break;
+
             case 0:
                 this.checked = godMode;
                 break;
@@ -95,6 +99,10 @@ class Button {
 
             case 4:
                 this.checked = ShowParticles;
+                break;
+
+            case 5:
+                this.checked = allowSaving;
                 break;
         }
 
@@ -124,6 +132,9 @@ class Button {
     clicked(){
         this.checked = !this.checked;
         switch(this.variable){
+            case ' ':
+                break;
+
             case 0:
                 godMode = this.checked;
                 break;
@@ -143,6 +154,10 @@ class Button {
             case 4:
                 ShowParticles = this.checked;
                 break;
+            
+            case 5:
+                allowSaving = this.checked;
+                break;
         }
 
         // console.log(`value: ${godMode}`)
@@ -156,29 +171,56 @@ class Button {
 
     // Button draw function
     draw(){
-        if (this.panelButton){
-            collisionCtx.fillStyle = this.color;
-            collisionCtx.fillRect(this.pos.x, this.pos.y, this.size, this.size);
-            ctx.drawImage(this.image, this.frame*64, 0, 64, 64, this.pos.x, this.pos.y, this.size, this.size);
-            drawLabel(`${this.text}`, 'white', this.pos.x+45, this.pos.y+this.size/2+7, 'left', 2+canvas.width/this.size/2, 'Verdana', false);
-        } else if (showButtons){
-            collisionCtx.fillStyle = this.color;
-            collisionCtx.fillRect(this.pos.x, this.pos.y, this.size, this.size);
-            ctx.drawImage(this.image, this.frame*64, 0, 64, 64, this.pos.x, this.pos.y, this.size, this.size);
-            drawLabel(`${this.text}`, 'white', this.pos.x+45, this.pos.y+this.size/2+7, 'left', 2+canvas.width/this.size/2, 'Verdana', false);
+        if (this.icon){
+            if (this.panelButton){
+                collisionCtx.fillStyle = this.color;
+                collisionCtx.fillRect(this.pos.x, this.pos.y, this.size, this.size);
+                ctx.drawImage(this.image, this.frame*64, 0, 64, 64, this.pos.x, this.pos.y, this.size, this.size);
+                drawLabel(`${this.text}`, 'white', this.pos.x+45, this.pos.y+this.size/2+7, 'left', 2+canvas.width/this.size/2, 'Verdana', false);
+            } else if (showButtons){
+                collisionCtx.fillStyle = this.color;
+                collisionCtx.fillRect(this.pos.x, this.pos.y, this.size, this.size);
+                ctx.drawImage(this.image, this.frame*64, 0, 64, 64, this.pos.x, this.pos.y, this.size, this.size);
+                drawLabel(`${this.text}`, 'white', this.pos.x+45, this.pos.y+this.size/2+7, 'left', 2+canvas.width/this.size/2, 'Verdana', false);
+            }
+        } else {
+            if (this.panelButton){
+                // collisionCtx.fillStyle = this.color;
+                // collisionCtx.fillRect(this.pos.x, this.pos.y, this.size, this.size);
+                // ctx.drawImage(this.image, this.frame*64, 0, 64, 64, this.pos.x, this.pos.y, this.size, this.size);
+                drawLabel(`${this.text}`, 'white', this.pos.x+45, this.pos.y+this.size/2+7, 'left', 2+canvas.width/this.size/2, 'Verdana', false);
+            } else if (showButtons){
+                // collisionCtx.fillStyle = this.color;
+                // collisionCtx.fillRect(this.pos.x, this.pos.y, this.size, this.size);
+                // ctx.drawImage(this.image, this.frame*64, 0, 64, 64, this.pos.x, this.pos.y, this.size, this.size);
+                drawLabel(`${this.text}`, 'white', this.pos.x+45, this.pos.y+this.size/2+7, 'left', 2+canvas.width/this.size/2, 'Verdana', false);
+            }
         }
     }
 }
 
-const btnLock = -20;
 const btnOffset = 40;
+let btnPos = {'x':20, 'y':-20};
+
+let btnID = 1;
 
 // Create Buttons
-buttons.push(new Button({'x':20, 'y':btnLock+btnOffset}, 32, 'Show Menu', 3, true));
-buttons.push(new Button({'x':20, 'y':btnLock+btnOffset*2}, 32, 'God Mode', 0, false));
-buttons.push(new Button({'x':20, 'y':btnLock+btnOffset*3}, 32, 'Insane Difficulty', 1, false));
-buttons.push(new Button({'x':20, 'y':btnLock+btnOffset*4}, 32, 'Auto Difficulty', 2, false));
-buttons.push(new Button({'x':20, 'y':btnLock+btnOffset*5}, 32, 'Particles', 4, false));
+add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset}, 32, '', 3, true, true)
+add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Cheats_______', ' ', false, false)
+add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'God Mode', 0, false, true)
+add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Settings______', ' ', false, false)
+add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Auto Difficulty', 2, false, true)
+add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Insane Difficulty', 1, false, true)
+add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Save Highscore', 5, false, true)
+add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Graphics______', ' ', false, false)
+add_btn({'x':btnPos.x, 'y':btnPos.y+btnOffset*btnID}, 32, 'Particles', 4, false, true)
+
+function add_btn(pos={'x':0, 'y':0}, size, text, id, shown, icon){
+    buttons.push(new Button({'x':pos.x, 'y':pos.y}, size, text, id, shown, icon));
+    btnID++;
+    return btnID;
+}
+
 
 
 let objects = [];
@@ -331,7 +373,7 @@ function drawLabel(_text, _color, _x, _y, _align, _size, _font, _shadow){
 function drawScore(){
     // fontSize = 10+canvas.width/20;
     // ctx.font = `${fontSize}px Impact`;
-    drawLabel(`Score: ${score}`, 'white', 40, canvas.height-25, 'left', 10+canvas.height/15, 'Impact', true);
+    drawLabel(`Score: ${score}`, 'white', 40, canvas.height-30, 'left', 10+canvas.height/15, 'Impact', true);
 }
 
 
@@ -344,7 +386,7 @@ function drawGameOver(){
         highScore = score;
         drawLabel(`your !NEW! High Score: ${score}`, 'white', canvas.width/2, canvas.height/2+70, 'center', 10+canvas.height/15, 'Impact', true);
 
-        if (canSave){
+        if (allowSaving && canSave){
             data = {'Score':highScore};
             var myFile = new File([JSON.stringify(data)], "data.json", {type: "text/json;charset=utf-8"});
             saveAs(myFile);
