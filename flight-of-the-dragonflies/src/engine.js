@@ -27,8 +27,9 @@ ipcRenderer.on('responseJSON', (event, args)  => {
         gData.allowSaving = gData.allowSaving;
         gData.allowSound = gData.allowSound;
     }
-    // console.log("recievedD: ", data.gData.highscore);
 });
+
+// console.log("recievedD: ", gData);
 
 
 // Store Data 
@@ -72,21 +73,14 @@ let lastTime = 0;
 // Debug Variables
 globalThis.showButtons = false;
 globalThis.godMode = false;
-// globalThis.insaneMode = gData.insaneMode;
-// globalThis.autoInsaneMode = gData.autoInsaneMode;
-// globalThis.ShowParticles = gData.ShowParticles;
-// globalThis.allowSaving = gData.allowSaving;
-// globalThis.allowSound = gData.allowSound;
 
 // Input Variables
 globalThis.MousePos = {'x':0, 'y':0};
 
 // Game Variables
 globalThis.gameState = "MainMenu";
-// globalThis.gameOver = false;
 let score = 0;
-// gData.highscore = gData.highscore;
-// console.log("TempData: ", gData.highscore)
+let newHScore = false;
 let canSave = false;
 
 // Graphics Variables
@@ -216,7 +210,7 @@ class Button {
         }
 
         ipcRenderer.send('pushJSON', ("", gData));
-        console.log(`gData: ${JSON.stringify(gData)}`);
+        // console.log(`gData: ${JSON.stringify(gData)}`);
 
         // console.log('Clicked: ', this.checked);
     }
@@ -448,9 +442,8 @@ function drawGameOver(){
 
     drawLabel(`GAME OVER your Score: ${score}`, 'white', canvas.width/2, canvas.height/2-70, 'center', 10+canvas.height/15, 'Impact', true);
 
-    if (score > 0 && score > gData.highscore){
+    if (score > 0 && newHScore){
         drawLabel(`your !NEW! High Score: ${score}`, 'white', canvas.width/2, canvas.height/2+70, 'center', 10+canvas.height/15, 'Impact', true);
-
     } else if (gData.highscore > 0) {
         drawLabel(`High Score: ${gData.highscore}`, 'white', canvas.width/2, canvas.height/2+70, 'center', 10+canvas.height/15, 'Impact', true);
     }
@@ -508,12 +501,13 @@ function start_game(){
 
     canSave = false;
     score = 0;
-    console.log('highscore: ', JSON.stringify(gData));
+    // console.log('highscore: ', JSON.stringify(gData));
     if (gData.autoInsaneMode){gData.insaneMode = false};
     objects = [];
     explosions = [];
     particles = [];
     update_window();
+    newHScore = false;
     gameState = "Playing";
 }
 
@@ -524,7 +518,6 @@ function reset_game(){
         gData.highscore = score;
     }
 
-    // data = gData;
         // Save data
     ipcRenderer.send('pushJSON', ("", gData));
     // console.log(`gData: ${JSON.stringify(gData)}`);
@@ -538,6 +531,7 @@ function reset_game(){
     explosions = [];
     particles = [];
     update_window();
+    newHScore = false;
     gameState = "Playing";
 }
 
@@ -604,6 +598,15 @@ function update(timestamp){
         collisionCtx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawGameOver();
+
+        if (canSave && score > 0 && score >= gData.highscore) {
+            // tmpScore = score-1;
+            gData.highscore = score;
+            ipcRenderer.send('pushJSON', ("", gData));
+            console.log("Saved");
+            newHScore = true;
+            canSave = false;
+        }
     }
 
     if (gameState === "MainMenu"){
