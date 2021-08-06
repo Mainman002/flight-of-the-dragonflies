@@ -53,6 +53,7 @@ const { ipcRenderer } = require('electron');
 const { ipcMain } = require('electron');
 
 const data = {};
+let dFile;
 
 // Load json data
 ipcMain.on('getState', (event, arg) => {
@@ -64,24 +65,22 @@ let fs = require('fs'),
     jsonData = JSON.stringify(data);
 
 
-
 // readFile data
 ipcMain.on('requestJSON', (event, arg) => {
-  if (arg){
-    fs.readFile('./gameData.json', (err, arg) => {
-      if (err){
-        console.log("No save file: ", err);
-        // throw err;
-      } else {
+  fs.readFile('./gameData.json', (err, arg) => {
+    if (err){
+      console.log("No save file: ", err);
+      // throw err;
+    } else {
+      if (fs.existsSync('./gameData.json') && arg.buffer.byteLength > 2) {
+      // if (arg.buffer.byteLength > 2){
         const d = JSON.parse(arg);
         console.log(`Reading: ${d}`);
-    
         event.reply('responseJSON',   d);
       }
-    }); 
-  }
+    }
+  }); 
 });
-
 
 // writeFile data
 ipcMain.on('pushJSON', (event, arg) => {
