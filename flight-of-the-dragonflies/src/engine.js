@@ -411,7 +411,6 @@ function drawLabel(_text, _color, _x, _y, _align, _size, _font, _shadow){
         ctx.fillText(`${_text}`, _x+3, _y+3);
     }
     
-
     // Text
     ctx.fillStyle = _color;
     ctx.fillText(`${_text}`, _x, _y);
@@ -421,7 +420,9 @@ function drawLabel(_text, _color, _x, _y, _align, _size, _font, _shadow){
 function drawMainMenu(){
     drawLabel(`Flight of the Dragonflies`, 'white', canvas.width/2, canvas.height/2-40, 'center', 10+canvas.height/15, 'Impact', true);
     drawLabel(`Click Mouse to Play`, 'white', canvas.width/2, canvas.height/2+80, 'center', 1+canvas.height/25, 'Impact', true);
-    drawLabel(`HighScore: ${gData.highscore}`, 'white', 40, canvas.height-30, 'left', 10+canvas.height/15, 'Impact', true);
+    if (gData.highscore > 0){
+        drawLabel(`HighScore: ${gData.highscore}`, 'white', 40, canvas.height-30, 'left', 10+canvas.height/15, 'Impact', true);
+    }
 }
 
 
@@ -593,6 +594,7 @@ function update(timestamp){
         particles = particles.filter(object => !object.markedForDeletion);
         drawScore();
     }
+
     if (gameState === "GameOver") {
         buttonCtx.clearRect(0, 0, canvas.width, canvas.height);
         collisionCtx.clearRect(0, 0, canvas.width, canvas.height);
@@ -617,3 +619,8 @@ function update(timestamp){
 }
 
 update(0);
+
+if (gameState === "MainMenu"){
+    drawMainMenu();
+}
+
