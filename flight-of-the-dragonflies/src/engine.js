@@ -1,19 +1,33 @@
 
 const { ipcRenderer } = require('electron');
 
+const dataDefault = {
+    "highscore":0,
+    "insaneMode":false,
+    "autoInsaneMode":true,
+    "ShowParticles":true,
+    "allowSaving":true,
+    "allowSound":true
+};
 
-let data = {"highscore":0};
-let highScore = 0;
+let gData = dataDefault;
+
+// let highscore = 0;
 
 // Load Data
 ipcRenderer.send('requestJSON');
 
 ipcRenderer.on('responseJSON', (event, args)  => {
     if (args){
-        data = args;
-        highScore = data.highscore;
+        gData = args;
+        gData.highscore = gData.highscore;
+        gData.insaneMode = gData.insaneMode;
+        gData.autoInsaneMode = gData.autoInsaneMode;
+        gData.ShowParticles = gData.ShowParticles;
+        gData.allowSaving = gData.allowSaving;
+        gData.allowSound = gData.allowSound;
     }
-    // console.log("recievedD: ", data.highscore);
+    // console.log("recievedD: ", data.gData.highscore);
 });
 
 
@@ -21,7 +35,7 @@ ipcRenderer.on('responseJSON', (event, args)  => {
 // ipcRenderer.send('getState');
 
 // ipcRenderer.on('sendState', (event, args)  => {
-//     args.highscore++;
+//     args.gData.highscore++;
 //     console.log(`Sent data: ${args}`);
 // });
 
@@ -58,13 +72,11 @@ let lastTime = 0;
 // Debug Variables
 globalThis.showButtons = false;
 globalThis.godMode = false;
-globalThis.insaneMode = false;
-globalThis.autoInsaneMode = true;
-globalThis.ShowParticles = true;
-globalThis.allowSaving = true;
-globalThis.allowSound = true;
-
-const btnVars = [godMode, autoInsaneMode, insaneMode, showButtons, ShowParticles, allowSaving, allowSound];
+// globalThis.insaneMode = gData.insaneMode;
+// globalThis.autoInsaneMode = gData.autoInsaneMode;
+// globalThis.ShowParticles = gData.ShowParticles;
+// globalThis.allowSaving = gData.allowSaving;
+// globalThis.allowSound = gData.allowSound;
 
 // Input Variables
 globalThis.MousePos = {'x':0, 'y':0};
@@ -73,8 +85,8 @@ globalThis.MousePos = {'x':0, 'y':0};
 globalThis.gameState = "MainMenu";
 // globalThis.gameOver = false;
 let score = 0;
-highScore = data.highscore;
-console.log("TempData: ", data.highscore)
+// gData.highscore = gData.highscore;
+// console.log("TempData: ", gData.highscore)
 let canSave = false;
 
 // Graphics Variables
@@ -83,7 +95,7 @@ fontSize = 10+canvas.width/20;
 ctx.font = `${fontSize}px Impact`;
 
 
-
+const btnVars = [godMode, gData.autoInsaneMode, gData.insaneMode, showButtons, gData.ShowParticles, gData.allowSaving, gData.allowSound];
 let buttons = [];
 class Button {
     constructor(pos={'x':0, 'y':0}, size=64, text='', variable, panelButton, icon){
@@ -114,11 +126,11 @@ class Button {
                 break;
 
             case 1:
-                this.checked = insaneMode;
+                this.checked = gData.insaneMode;
                 break;
 
             case 2:
-                this.checked = autoInsaneMode;
+                this.checked = gData.autoInsaneMode;
                 break;
 
             case 3:
@@ -126,15 +138,15 @@ class Button {
                 break;
 
             case 4:
-                this.checked = ShowParticles;
+                this.checked = gData.ShowParticles;
                 break;
 
             case 5:
-                this.checked = allowSaving;
+                this.checked = gData.allowSaving;
                 break; 
             
             case 6:
-                this.checked = allowSound;
+                this.checked = gData.allowSound;
                 break;
         }
 
@@ -172,11 +184,11 @@ class Button {
                 break;
 
             case 1:
-                insaneMode = this.checked;
+                gData.insaneMode = this.checked;
                 break;
 
             case 2:
-                autoInsaneMode = this.checked;
+                gData.autoInsaneMode = this.checked;
                 break;
 
             case 3:
@@ -184,15 +196,15 @@ class Button {
                 break;
 
             case 4:
-                ShowParticles = this.checked;
+                gData.ShowParticles = this.checked;
                 break;
             
             case 5:
-                allowSaving = this.checked;
+                gData.allowSaving = this.checked;
                 break;
             
             case 6:
-                allowSound = this.checked;
+                gData.allowSound = this.checked;
                 break;
         }
 
@@ -202,6 +214,10 @@ class Button {
         } else {
             this.frame = 0;
         }
+
+        ipcRenderer.send('pushJSON', ("", gData));
+        console.log(`gData: ${JSON.stringify(gData)}`);
+
         // console.log('Clicked: ', this.checked);
     }
 
@@ -287,7 +303,7 @@ class Object {
         if (this.pos.y < 0 - this.size.h/2){this.direction.v = -this.direction.v}
         if (this.pos.y > canvas.height - this.size.h*0.7){this.direction.v = -this.direction.v}
 
-        if (insaneMode){this.direction.h += 0.1;}
+        if (gData.insaneMode){this.direction.h += 0.1;}
         this.pos.x -= this.direction.h;
         this.pos.y += this.direction.v;
 
@@ -299,7 +315,7 @@ class Object {
             else this.frame++;
             this.timeSinceLastFrame = 0;
             // console.log(deltatime);
-            if (ShowParticles && this.hasTrail){
+            if (gData.ShowParticles && this.hasTrail){
                 for (let i = 0; i < 3; i++){
                     particles.push(new Particle(this.pos.x,this.pos.y, this.size, this.color));
                 }
@@ -343,7 +359,7 @@ class Explosion {
    } 
 
    update(deltatime){
-        if (allowSound && this.frame === 0){this.sound.play()};
+        if (gData.allowSound && this.frame === 0){this.sound.play()};
             this.timeSinceLastFrame += deltatime;
         if (this.timeSinceLastFrame > this.frameInterval){
             this.frame++;
@@ -411,7 +427,7 @@ function drawLabel(_text, _color, _x, _y, _align, _size, _font, _shadow){
 function drawMainMenu(){
     drawLabel(`Flight of the Dragonflies`, 'white', canvas.width/2, canvas.height/2-40, 'center', 10+canvas.height/15, 'Impact', true);
     drawLabel(`Click Mouse to Play`, 'white', canvas.width/2, canvas.height/2+80, 'center', 1+canvas.height/25, 'Impact', true);
-    drawLabel(`HighScore: ${data.highscore}`, 'white', 40, canvas.height-30, 'left', 10+canvas.height/15, 'Impact', true);
+    drawLabel(`HighScore: ${gData.highscore}`, 'white', 40, canvas.height-30, 'left', 10+canvas.height/15, 'Impact', true);
 }
 
 
@@ -419,8 +435,8 @@ function drawScore(){
     // fontSize = 10+canvas.width/20;
     // ctx.font = `${fontSize}px Impact`;
     drawLabel(`Score: ${score}`, 'white', 40, canvas.height-30, 'left', 10+canvas.height/15, 'Impact', true);
-    if (score < data.highscore){
-        drawLabel(`HighScore: ${data.highscore}`, 'white', canvas.width-40, canvas.height-30, 'right', 10+canvas.height/15, 'Impact', true);
+    if (score < gData.highscore){
+        drawLabel(`HighScore: ${gData.highscore}`, 'white', canvas.width-40, canvas.height-30, 'right', 10+canvas.height/15, 'Impact', true);
     } else {
         drawLabel(`!New! HighScore: ${score}`, 'white', canvas.width-40, canvas.height-30, 'right', 10+canvas.height/15, 'Impact', true);
     }
@@ -432,12 +448,11 @@ function drawGameOver(){
 
     drawLabel(`GAME OVER your Score: ${score}`, 'white', canvas.width/2, canvas.height/2-70, 'center', 10+canvas.height/15, 'Impact', true);
 
-    if (score > 0 && score >= highScore){
-        highScore = score;
+    if (score > 0 && score > gData.highscore){
         drawLabel(`your !NEW! High Score: ${score}`, 'white', canvas.width/2, canvas.height/2+70, 'center', 10+canvas.height/15, 'Impact', true);
 
-    } else if (highScore > 0) {
-        drawLabel(`High Score: ${highScore}`, 'white', canvas.width/2, canvas.height/2+70, 'center', 10+canvas.height/15, 'Impact', true);
+    } else if (gData.highscore > 0) {
+        drawLabel(`High Score: ${gData.highscore}`, 'white', canvas.width/2, canvas.height/2+70, 'center', 10+canvas.height/15, 'Impact', true);
     }
 }
 
@@ -463,7 +478,7 @@ window.addEventListener('mousedown', function(e){
         if (ob.randomColors[0] === pc[0] && ob.randomColors[1] === pc[1] && ob.randomColors[2] === pc[2]){
             ob.markedForDeletion = true;
             score++;
-            if (autoInsaneMode && score > 20){insaneMode = true};
+            if (gData.autoInsaneMode && score > 20){gData.insaneMode = true};
             explosions.push(new Explosion(ob.pos, ob.size));
         }
     });
@@ -493,8 +508,8 @@ function start_game(){
 
     canSave = false;
     score = 0;
-    console.log('HighScore: ', highScore);
-    if (autoInsaneMode){insaneMode = false};
+    console.log('highscore: ', JSON.stringify(gData));
+    if (gData.autoInsaneMode){gData.insaneMode = false};
     objects = [];
     explosions = [];
     particles = [];
@@ -505,16 +520,20 @@ function start_game(){
 
 function reset_game(){
 
-    if (allowSaving && score > 0 && score >= highScore){
-        data.highscore = highScore;
-        // Save data
-        ipcRenderer.send('pushJSON', ("", data));
+    if (score > 0 && score > gData.highscore){
+        gData.highscore = score;
     }
+
+    // data = gData;
+        // Save data
+    ipcRenderer.send('pushJSON', ("", gData));
+    // console.log(`gData: ${JSON.stringify(gData)}`);
+    // }
 
     canSave = false;
     score = 0;
-    console.log('HighScore: ', highScore);
-    if (autoInsaneMode){insaneMode = false};
+    // console.log('highscore: ', gData.highscore);
+    if (gData.autoInsaneMode){gData.insaneMode = false};
     objects = [];
     explosions = [];
     particles = [];
