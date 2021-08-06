@@ -70,7 +70,8 @@ const btnVars = [godMode, autoInsaneMode, insaneMode, showButtons, ShowParticles
 globalThis.MousePos = {'x':0, 'y':0};
 
 // Game Variables
-globalThis.gameOver = false;
+globalThis.gameState = "MainMenu";
+// globalThis.gameOver = false;
 let score = 0;
 highScore = data.highscore;
 console.log("TempData: ", data.highscore)
@@ -308,7 +309,8 @@ class Object {
         // Game Over
 
         if (!godMode && this.pos.x < 0 - this.size.w) {
-            gameOver = true;
+            // gameOver = true;
+            gameState = "GameOver";
             canSave = true;
         }
     }
@@ -406,10 +408,22 @@ function drawLabel(_text, _color, _x, _y, _align, _size, _font, _shadow){
 }
 
 
+function drawMainMenu(){
+    drawLabel(`Flight of the Dragonflies`, 'white', canvas.width/2, canvas.height/2-40, 'center', 10+canvas.height/15, 'Impact', true);
+    drawLabel(`Click Mouse to Play`, 'white', canvas.width/2, canvas.height/2+80, 'center', 1+canvas.height/25, 'Impact', true);
+    drawLabel(`HighScore: ${data.highscore}`, 'white', 40, canvas.height-30, 'left', 10+canvas.height/15, 'Impact', true);
+}
+
+
 function drawScore(){
     // fontSize = 10+canvas.width/20;
     // ctx.font = `${fontSize}px Impact`;
     drawLabel(`Score: ${score}`, 'white', 40, canvas.height-30, 'left', 10+canvas.height/15, 'Impact', true);
+    if (score < data.highscore){
+        drawLabel(`HighScore: ${data.highscore}`, 'white', canvas.width-40, canvas.height-30, 'right', 10+canvas.height/15, 'Impact', true);
+    } else {
+        drawLabel(`!New! HighScore: ${score}`, 'white', canvas.width-40, canvas.height-30, 'right', 10+canvas.height/15, 'Impact', true);
+    }
 }
 
 
@@ -435,9 +449,12 @@ window.addEventListener('mousemove', function(e){
 
 
 window.addEventListener('mousedown', function(e){
-
-    if (gameOver){
+    if (gameState === "GameOver"){
         reset_game();
+    }
+
+    if (gameState === "MainMenu"){
+        start_game();
     }
 
     const detectPixelColor = collisionCtx.getImageData(e.x, e.y, 1, 1);
@@ -461,12 +478,29 @@ window.addEventListener('mousedown', function(e){
 
 window.addEventListener('keydown', (e) => {
     if (e.key === "Enter" && !e.repeat || e.key === " " && !e.repeat){
-        if (gameOver){
+        if (gameState === "GameOver"){
             reset_game();
-            // console.log("key", e.key);
+        }
+
+        if (gameState === "MainMenu"){
+            start_game();
         }
     }
 });
+
+
+function start_game(){
+
+    canSave = false;
+    score = 0;
+    console.log('HighScore: ', highScore);
+    if (autoInsaneMode){insaneMode = false};
+    objects = [];
+    explosions = [];
+    particles = [];
+    update_window();
+    gameState = "Playing";
+}
 
 
 function reset_game(){
@@ -478,7 +512,6 @@ function reset_game(){
     }
 
     canSave = false;
-    gameOver = false;
     score = 0;
     console.log('HighScore: ', highScore);
     if (autoInsaneMode){insaneMode = false};
@@ -486,6 +519,7 @@ function reset_game(){
     explosions = [];
     particles = [];
     update_window();
+    gameState = "Playing";
 }
 
 
@@ -523,34 +557,38 @@ function update(timestamp){
     }
 
 
-    if (!gameOver) {
-    buttonCtx.clearRect(0, 0, canvas.width, canvas.height);
-    collisionCtx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    let deltatime = timestamp - lastTime;
-    lastTime = timestamp;
-    timeToNextSpawn += deltatime;
-    if (timeToNextSpawn > spawnInterval){
-        objects.push(new Object());
-        timeToNextSpawn = 0;
-        objects.sort(function(a,b){
-            return a.size.w - b.size.w;
-        });
-    }
+    if (gameState === "Playing") {
+        buttonCtx.clearRect(0, 0, canvas.width, canvas.height);
+        collisionCtx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let deltatime = timestamp - lastTime;
+        lastTime = timestamp;
+        timeToNextSpawn += deltatime;
+        if (timeToNextSpawn > spawnInterval){
+            objects.push(new Object());
+            timeToNextSpawn = 0;
+            objects.sort(function(a,b){
+                return a.size.w - b.size.w;
+            });
+        }
 
-    [...particles, ...objects, ...explosions, ...buttons].forEach(ob => ob.update(deltatime));
-    [...particles, ...objects, ...explosions, ...buttons].forEach(ob => ob.draw());
-    buttons = buttons.filter(object => !object.markedForDeletion);
-    objects = objects.filter(object => !object.markedForDeletion);
-    explosions = explosions.filter(object => !object.markedForDeletion);
-    particles = particles.filter(object => !object.markedForDeletion);
-    drawScore();
-}
-    if (gameOver) {
+        [...particles, ...objects, ...explosions, ...buttons].forEach(ob => ob.update(deltatime));
+        [...particles, ...objects, ...explosions, ...buttons].forEach(ob => ob.draw());
+        buttons = buttons.filter(object => !object.markedForDeletion);
+        objects = objects.filter(object => !object.markedForDeletion);
+        explosions = explosions.filter(object => !object.markedForDeletion);
+        particles = particles.filter(object => !object.markedForDeletion);
+        drawScore();
+    }
+    if (gameState === "GameOver") {
         buttonCtx.clearRect(0, 0, canvas.width, canvas.height);
         collisionCtx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawGameOver();
+    }
+
+    if (gameState === "MainMenu"){
+        drawMainMenu();
     }
 
     requestAnimationFrame(update);
