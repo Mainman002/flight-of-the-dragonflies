@@ -7,5 +7,26 @@ https://youtu.be/gCa0z4B-CRo?list=PLYElE_rzEw_sowQGjRdvwh9eAEt62d_Eu
 
 ![icon](https://user-images.githubusercontent.com/11281480/128264789-aa41359e-81d9-400a-b931-cf8d6e5b878c.png)
 
+### How to Play / Install
+* install npm ( https://docs.npmjs.com/downloading-and-installing-node-js-and-npm )
+* open a terminal, powershell, or Visual Studio Code then run this command to install
+
+```js
+npm i
+```
+* and this command to play
+
+```js
+npm start
+```
+
+( if you'd prefer to make a stand alone game then run this command )
+
+
+```js
+electron-builder build
+```
+
+( You'll find the executable / AppImage in the "dist" folder )
 
 ![image](https://user-images.githubusercontent.com/11281480/128399282-d2f7d541-37f3-486e-a056-2364ae0254bf.png)
