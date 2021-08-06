@@ -21,7 +21,7 @@ function createWindow () {
   mainWindow.loadFile('index.html')
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
 }
 
 // This method will be called when Electron has finished
@@ -67,18 +67,19 @@ let fs = require('fs'),
 
 // readFile data
 ipcMain.on('requestJSON', (event, arg) => {
-
-  fs.readFile('./gameData.json', (err, arg) => {
-    if (err){
-      console.log("No save file: ", err);
-      // throw err;
-    } else {
-      const d = JSON.parse(arg);
-      console.log(`Reading: ${d.highscore}`);
-  
-      event.reply('responseJSON',   d);
-    }
-  }); 
+  if (arg){
+    fs.readFile('./gameData.json', (err, arg) => {
+      if (err){
+        console.log("No save file: ", err);
+        // throw err;
+      } else {
+        const d = JSON.parse(arg);
+        console.log(`Reading: ${d}`);
+    
+        event.reply('responseJSON',   d);
+      }
+    }); 
+  }
 });
 
 
@@ -86,7 +87,7 @@ ipcMain.on('requestJSON', (event, arg) => {
 ipcMain.on('pushJSON', (event, arg) => {
 
   fs.writeFile('./gameData.json', JSON.stringify(arg), (err) => {
-    console.log(`Writing: ${arg.highscore}`);
+    console.log(`Writing: ${arg}`);
     if (err) throw err;
   });
 });
